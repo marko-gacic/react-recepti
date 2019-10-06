@@ -10,16 +10,28 @@ export default class Recipes extends Component {
   state={
     recipes:recipeData,
     search: "",
-    url:`https://www.food2fork.com/api/search?key=${process.env.REACT_APP_API_KEY}`
+    url:`https://www.food2fork.com/api/search?key=${process.env.REACT_APP_API_KEY}`,
+    base_url:`https://www.food2fork.com/api/search?key=${process.env.REACT_APP_API_KEY}`,
+    query:"&q=",
+    error:""
   }
 
   async getRecipes(){
 try{
 const data = await fetch(this.state.url);
 const jsonData = await data.json();
-this.setState({
-  recipes:jsonData.recipes
-})
+if(jsonData.recipes.lenght ===0){
+  this.setState({
+    error:"sorry but your search don't match with any recipes, please try again or press search icon for most popular recipes"
+  })
+}
+else{
+  this.setState({
+    recipes:jsonData.recipes,
+    error:""
+  })
+}
+
 }
 catch(error){
 
@@ -37,12 +49,32 @@ this.getRecipes();
   }
   handleSubmit = (e) =>{
     e.preventDefault()
+    const {base_url,query,search} = this.state;
+    this.setState({
+      url:`${base_url}${query}${search}`,
+      search:""
+    },()=>this.getRecipes())
   }
  render() {
   return (
   <>
-  <Search search={this.state.search} handleChange={this.handleChange} handleSubmit={this.handleSubmit} />
-  <RecipeList recipes={this.state.recipes} />
+  <Search 
+  search={this.state.search} 
+  handleChange={this.handleChange} 
+  handleSubmit={this.handleSubmit} />
+  {this.state.error?(
+  <section>
+    <div className="row" >
+      <div className="col" >
+        <h2 className="text-orange text-center text-uppercase mt-5" > 
+        {this.state.error} </h2>
+    </div>
+    </div>
+    </section>
+    ):(
+    <RecipeList recipes={this.state.recipes} />
+    )}
+  
    </>
   )
  }
